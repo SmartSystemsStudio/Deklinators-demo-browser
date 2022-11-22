@@ -1,0 +1,128 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Deklinatora demo</title>
+<script type="text/javascript" src="deklinatorsBundle.js"></script>
+<script>
+
+function decline() {
+  const errorBox = document.getElementById("error-box");
+  errorBox.innerText = "";
+  try {
+    const {Noun, Case, GNumber, Gender} = deklinators;
+    const input = sanitize(document.getElementById("noun").value);
+    const optionProperNoun = document.getElementById("properNoun").checked;
+    const optionOverrideGender = document.getElementById("overrideGender").value;
+    const nounOptions = { useArWithInstrumental: false, properNoun: optionProperNoun };
+    if (optionOverrideGender) nounOptions.overrideGender = Gender[optionOverrideGender];
+
+    // Transform the input string in an array of Noun objects and separator strings
+    const nounList = input.split(/([-,\s]+)/).map(s => /^[-,\s]+$/.test(s) ? s : new Noun(s, nounOptions));
+
+    ["singular", "plural"].forEach(number => {
+      ["nominative", "genitive", "dative", "accusative", "instrumental", "locative", "vocative"].forEach(gcase => {
+        const cell = document.getElementById(`${number}-${gcase}`);
+        try {
+          const declensionList = nounList.map(s => s instanceof Noun ? s.declension(Case[gcase], GNumber[number]) : s);
+          cell.innerText = (gcase == "instrumental" ? "ar " : "") + declensionList.join("") + (gcase == "vocative" ? "!" : "");
+        } catch(e) {
+          cell.innerText = "-"; 
+          console.error(e.code, e.message);
+        }
+      });
+    });
+  } catch (e) {
+    const errorBox = document.getElementById("error-box");
+    console.error(e.code, e.message);
+    errorBox.innerText = `Kļūda: ${e.message}`;
+    return;
+  }
+}
+
+function sanitize(word) {
+  return word.trim();
+}
+
+function init() {
+  const params = (new URL(location)).searchParams;
+  const noun = params.has("v") ? params.get("v") : "ozols";
+  console.log(params, noun);
+  document.getElementById("noun").value = sanitize(noun);
+  decline();
+}
+
+</script>
+<style>
+#error-box {
+  color: red;
+}
+#info-box {
+  margin: 20px 0px;
+}
+table.declensions {
+  border: 1px solid black;
+  border-collapse: collapse;
+  margin: 5px 0px;
+}
+table.declensions td, th {
+  border: 1px solid black;
+  padding: 3px;
+}
+</style>
+</head>
+<body onload="init()">
+
+<input id="noun" type="text"/>
+<input id="properNoun" type="checkbox"/><label for="properNoun">īpašvārds</label>&nbsp;&nbsp;
+pielāgot dzimti: <select id="overrideGender"><option value="">Nē</<option><option value="masculine">vīriešu</<option><option value="feminine">sieviešu</<option></select>
+<button onclick="decline()">Locīt</button>
+
+<div id="error-box"></div>
+
+<table class="declensions">
+  <tr>
+    <th>Locījums</th>
+    <th>Vienskaitlis</th>
+    <th>Daudzskaitlis</th>
+  </tr>
+  <tr>
+    <td>Nominatīvs (Kas?)</td>
+    <td id="singular-nominative"></td>
+    <td id="plural-nominative"></td>
+  </tr>
+  <tr>
+    <td>Ģenitīvs (Kā?)</td>
+    <td id="singular-genitive"></td>
+    <td id="plural-genitive"></td>
+  </tr>
+  <tr>
+    <td>Datīvs (Kam?)</td>
+    <td id="singular-dative"></td>
+    <td id="plural-dative"></td>
+  </tr>
+  <tr>
+    <td>Akuzatīvs (Ko?)</td>
+    <td id="singular-accusative"></td>
+    <td id="plural-accusative"></td>
+  </tr>
+  <tr>
+    <td>Instrumentālis (Ar ko?)</td>
+    <td id="singular-instrumental"></td>
+    <td id="plural-instrumental"></td>
+  </tr>
+  <tr>
+    <td>Lokatīvs (Kur?)</td>
+    <td id="singular-locative"></td>
+    <td id="plural-locative"></td>
+  </tr>
+  <tr>
+    <td>Vokatīvs (bez jautājuma)</td>
+    <td id="singular-vocative"></td>
+    <td id="plural-vocative"></td>
+  </tr>
+</table>
+
+<div id="info-box">Šī ir demonstrācija, kā var pielietot <a href="https://www.npmjs.com/package/deklinators">Deklinators</a> Node.js moduli web vidē. Šīs lapas pirmkods atrodams <a href="https://github.com/SmartSystemsStudio/Deklinators-demo-browser">te</a>.</div>
+
+</body>
+</html>
