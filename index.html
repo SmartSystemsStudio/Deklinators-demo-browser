@@ -19,6 +19,10 @@ function decline() {
     // Transform the input string in an array of Noun objects and separator strings
     const nounList = input.split(/([-,\s]+)/).map(s => /^[-,\s]+$/.test(s) ? s : new Noun(s, nounOptions));
 
+    const url = new URL("/index.html", window.location.origin);
+    url.searchParams.set("v", input);
+    window.history.replaceState({}, document.title, url);
+
     ["singular", "plural"].forEach(number => {
       ["nominative", "genitive", "dative", "accusative", "instrumental", "locative", "vocative"].forEach(gcase => {
         const cell = document.getElementById(`${number}-${gcase}`);
@@ -46,7 +50,6 @@ function sanitize(word) {
 function init() {
   const params = (new URL(location)).searchParams;
   const noun = params.has("v") ? params.get("v") : "ozols";
-  console.log(params, noun);
   document.getElementById("noun").value = sanitize(noun);
   decline();
 }
@@ -72,7 +75,7 @@ table.declensions td, th {
 </head>
 <body onload="init()">
 
-<input id="noun" type="text"/>
+<input id="noun" type="text" onkeypress="if (event.key === 'Enter') decline()"/>
 <input id="properNoun" type="checkbox"/><label for="properNoun">īpašvārds</label>&nbsp;&nbsp;
 pielāgot dzimti: <select id="overrideGender"><option value="">Nē</<option><option value="masculine">vīriešu</<option><option value="feminine">sieviešu</<option></select>
 <button onclick="decline()">Locīt</button>
